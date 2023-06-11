@@ -2,6 +2,9 @@
 # Main github actions workflow
 name: main
 on:
+  push:
+    branches:
+      - main
   pull_request:
     branches:
       - main
