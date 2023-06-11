@@ -1,0 +1,16 @@
+---
+version: 2
+updates:
+  - directory: /
+    reviewers:
+      - "brucellino"
+    package-ecosystem: "github-actions"
+    rebase-strategy: auto
+    schedule:
+      interval: "weekly"
+  - directory: "terraform"
+    reviewers:
+      - "brucellino"
+    package-ecosystem: "terraform"
+    schedule:
+     interval: weekly

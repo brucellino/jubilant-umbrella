@@ -22,14 +22,13 @@ repos:
         files: terraform/.*
       - id: terraform_docs
         args:
-          - --hook-config=--path-to-file=terraform/README.md
+          - --hook-config=--path-to-file=README.md
           - --hook-config=--create-file-if-not-exist=true
   - repo: https://github.com/Yelp/detect-secrets
     rev: v1.4.0
     hooks:
       - id: detect-secrets
         args:
-          - '--baseline'
-          - '.secrets.baseline'
+          - '--baseline=.secrets.baseline'
           - '--exclude-files'
-          - '.terrform.lock.hcl'
+          - '"^\.terraform.lock.hcl|\.secrets\.baseline"'

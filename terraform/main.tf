@@ -16,7 +16,7 @@ terraform {
       version = "~> 3.0"
     }
     http = {
-      source = "hashicorp/http"
+      source  = "hashicorp/http"
       version = "3.3.0"
     }
     null = {
@@ -52,11 +52,13 @@ variable "cf_zone" {
 }
 
 variable "krateo_version" {
-  type = string
+  type        = string
   description = "Version of the Krateo release to use"
   validation {
-    condition = can(regexall("^(?P<major>0|[1-9]\\d*)\\.(?P<minor>0|[1-9]\\d*)\\.(?P<patch>0|[1-9]\\d*)(?:-(?P<prerelease>(?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\\.(?:0|[1-9]\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\\+(?P<buildmetadata>[0-9a-zA-Z-]+(?:\\.[0-9a-zA-Z-]+)*))?$"), var.krateo_version)
+    condition     = can(regexall("^(?P<major>0|[1-9]\\d*)\\.(?P<minor>0|[1-9]\\d*)\\.(?P<patch>0|[1-9]\\d*)(?:-(?P<prerelease>(?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\\.(?:0|[1-9]\\d*|\\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\\+(?P<buildmetadata>[0-9a-zA-Z-]+(?:\\.[0-9a-zA-Z-]+)*))?$", var.krateo_version))
+    error_message = "Version is not a semantic version."
   }
+
 }
 
 variable "krateo_endpoint" {
@@ -91,7 +93,7 @@ provider "digitalocean" {
 }
 
 provider "cloudflare" {
-  token = data.vault_kv_secret_v2.cf.data["token"]
+  api_token = data.vault_kv_secret_v2.cf.data["token"]
 }
 data "digitalocean_kubernetes_versions" "this" {
   version_prefix = var.k8s_version_prefix
@@ -103,16 +105,17 @@ data "digitalocean_kubernetes_versions" "this" {
   }
 }
 
-data "cloudflare_zones" "k" {
+data "cloudflare_zone" "k" {
   name = var.cf_zone
 }
 
 resource "digitalocean_kubernetes_cluster" "k" {
-  name         = var.k8s_cluster_name
-  region       = "ams3"
-  auto_upgrade = true
-  version      = data.digitalocean_kubernetes_versions.this.latest_version
-  ha           = false
+  name          = var.k8s_cluster_name
+  region        = "ams3"
+  auto_upgrade  = true
+  version       = data.digitalocean_kubernetes_versions.this.latest_version
+  ha            = false
+  surge_upgrade = true
   maintenance_policy {
     start_time = "04:00"
     day        = "sunday"
@@ -125,41 +128,46 @@ resource "digitalocean_kubernetes_cluster" "k" {
   }
 }
 
-resource "local_file" "k8config" {
+resource "local_file" "k8sconfig" {
   content  = digitalocean_kubernetes_cluster.k.kube_config.0.raw_config
   filename = "${path.module}/kubeconfig-${var.k8s_cluster_name}"
 }
 
-# Get the krateo release asset by tag name.
-data "http" "krateo" {
-  url = "https://api.github.com/repos/krateoplatformops/krateo/releases/tags/${krateo_release_version}"
-  lifecycle {
-    postcondition {
-      condition     = contains([201, 204], self.status_code)
-      error_message = "Status code invalid"
-    }
+locals {
+  krateo_release_url = join("/", [
+    "https://github.com/krateoplatformops/krateo",
+    "releases/download",
+    "v${var.krateo_version}",
+    "krateo_${var.krateo_version}_linux_amd64.tar.gz"
+  ])
+}
+
+resource "null_resource" "k_install" {
+  triggers = {
+    k8s_endpoint = digitalocean_kubernetes_cluster.k.urn
+  }
+  provisioner "local-exec" {
+    command     = "curl -fSL ${local.krateo_release_url} | tar xz krateo >krateo"
+    interpreter = ["/bin/bash", "-c"]
+  }
+
+  provisioner "local-exec" {
+    command     = "echo '${var.cf_zone}' | ./krateo init --kubeconfig ${local_file.k8sconfig.filename}"
+    interpreter = ["/bin/bash", "-c"]
   }
 }
 
-locals {
-  release_url
+# LB created by krateo.
+data "digitalocean_loadbalancer" "krateo" {
+  depends_on = [null_resource.k_install]
+  # id         = "d72d4916-9023-4616-b292-33032dda4799" # <- obtained from the console
+  name = "a377b25f30a4149538465e330ca32e50" # <- obtained from the console.
 }
 
-data "http" "krateo_asset" {
-  
+resource "cloudflare_record" "k" {
+  zone_id = data.cloudflare_zone.k.id
+  type    = "A"
+  proxied = true
+  name    = join(".", ["app", var.cf_zone])
+  value   = data.digitalocean_loadbalancer.krateo.ip
 }
-
-# resource "null_resource" "k_install" {
-#   triggers = {
-#     k8s_endpoint = digitalocean_kubernetes_cluster.k.urn
-#   }
-
-#   provisioner "local_exec" 
-# }
-
-# resource "cloudflare_record" "k" {
-#   zone_id = data.cloudflare_zones.k.id
-#   name    = var.krateo_endpoint
-#   # value  = # LB created by krateo.
-
-# }

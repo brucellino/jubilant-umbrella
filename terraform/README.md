@@ -1,36 +1,59 @@
-<img src="docs/media/logo.svg" alt="Krateo Platformops" width="400">
+# terraform
 
-**Krateo Platformops** is an open source tool, based on CNCF projects such as Kubernetes and Crossplane, that gives users the capability to create any desired resource on basically any infrastructure they'd like. Be it a K8s cluster, microservice, application, pipeline, database or anything else, Krateo has got your back. The only requirement is for the resource to be descriptible via a YAML file representing the resource's _desired state_ (rings a bell? 😉).
+<!-- BEGINNING OF PRE-COMMIT-TERRAFORM DOCS HOOK -->
+## Requirements
 
-Krateo allows for:
+| Name | Version |
+|------|---------|
+| <a name="requirement_cloudflare"></a> [cloudflare](#requirement\_cloudflare) | ~> 3.0 |
+| <a name="requirement_digitalocean"></a> [digitalocean](#requirement\_digitalocean) | 2.28.1 |
+| <a name="requirement_http"></a> [http](#requirement\_http) | 3.3.0 |
+| <a name="requirement_null"></a> [null](#requirement\_null) | 3.2.1 |
+| <a name="requirement_vault"></a> [vault](#requirement\_vault) | 3.16.0 |
 
-- **Creating any kind of resources within and outside the Kubernetes cluster it runs on**: whilst Krateo runs as a Deployment in a Kubernetes cluster, it can also create resources _outside_ the cluster. You can use Krateo to create anything from new Kubernetes clusters, Logstash pipelines, Docker registries, API gateways, and many others.
-- **Focusing on the management of services**: thanks to [Crossplane](https://crossplane.io) and to [Backstage](https://backstage.io/), Krateo frees the user from most of the burden of cluster management, giving them the ability to entirely focus on the services that must be run. While the infrastructure is managed by Crossplane, the resources to be deployed can be easily found and configured in Backstage's UI, which acts as a catalog of ready-to-use services. This results a phenomenal user experience that drastically reduces wastes of time.
-- **Single-handedly monitoring and controlling resources**: Krateo also acts as a centralized controlplane, letting users monitor anything ranging from CI/CD pipelines to pod statuses and open tickets on your JIRA. All the information you need is present on a single page -- you'll never have to guess the correct dashboard ever again.
+## Providers
 
-## Our mission
+| Name | Version |
+|------|---------|
+| <a name="provider_cloudflare"></a> [cloudflare](#provider\_cloudflare) | 3.35.0 |
+| <a name="provider_digitalocean"></a> [digitalocean](#provider\_digitalocean) | 2.28.1 |
+| <a name="provider_local"></a> [local](#provider\_local) | 2.4.0 |
+| <a name="provider_null"></a> [null](#provider\_null) | 3.2.1 |
+| <a name="provider_vault"></a> [vault](#provider\_vault) | 3.16.0 |
 
-With Krateo, we aim at putting together many awesome tools from the CNCF landscape to provide our users with a simple-to-use, complete and modular platform that allows for creating resources on any infrastructure. We see Krateo as a powerful tool that improves the workflow of teams by defining clear roles in which the infrastructure team creates the resource templates needed by the developers, and the developers are the final users that use those templates and can manage the lifecycle of the created resources from a simple, unified dashboard.
+## Modules
 
-In our vision, Krateo is:
+No modules.
 
-- a _self-service platform_, where users can autonomously choose what to create and where;
-- a complete _controlplane_ that eases and centralizes many processes, putting all the relevant information in a single page rather than distributing it on tens of different locations;
-- a _multi-cloud provider_ tool: it works with all the major cloud providers and with on-prem installations;
-- either managed or easily installable on your existing Kubernetes cluster.
+## Resources
 
-## Getting started
+| Name | Type |
+|------|------|
+| [cloudflare_record.k](https://registry.terraform.io/providers/cloudflare/cloudflare/latest/docs/resources/record) | resource |
+| [digitalocean_kubernetes_cluster.k](https://registry.terraform.io/providers/digitalocean/digitalocean/2.28.1/docs/resources/kubernetes_cluster) | resource |
+| [local_file.k8sconfig](https://registry.terraform.io/providers/hashicorp/local/latest/docs/resources/file) | resource |
+| [null_resource.k_install](https://registry.terraform.io/providers/hashicorp/null/3.2.1/docs/resources/resource) | resource |
+| [cloudflare_zone.k](https://registry.terraform.io/providers/cloudflare/cloudflare/latest/docs/data-sources/zone) | data source |
+| [digitalocean_kubernetes_versions.this](https://registry.terraform.io/providers/digitalocean/digitalocean/2.28.1/docs/data-sources/kubernetes_versions) | data source |
+| [digitalocean_loadbalancer.krateo](https://registry.terraform.io/providers/digitalocean/digitalocean/2.28.1/docs/data-sources/loadbalancer) | data source |
+| [vault_kv_secret_v2.cf](https://registry.terraform.io/providers/hashicorp/vault/3.16.0/docs/data-sources/kv_secret_v2) | data source |
+| [vault_kv_secret_v2.do](https://registry.terraform.io/providers/hashicorp/vault/3.16.0/docs/data-sources/kv_secret_v2) | data source |
 
-Before install Krateo, please verify our [requirements](./docs/REQUIREMENTS.md).
+## Inputs
 
-Getting started with Krateo is as easy as following its [installation instructions](./docs/INSTALL.md).
+| Name | Description | Type | Default | Required |
+|------|-------------|------|---------|:--------:|
+| <a name="input_cf_vault_mount"></a> [cf\_vault\_mount](#input\_cf\_vault\_mount) | Vault mount where the CloudFlare API token is stored | `string` | n/a | yes |
+| <a name="input_cf_vault_name"></a> [cf\_vault\_name](#input\_cf\_vault\_name) | Name of the secret to read with the CloudFlare API token | `string` | n/a | yes |
+| <a name="input_cf_zone"></a> [cf\_zone](#input\_cf\_zone) | Name of the zone in cloudflare which we will create a record for krateo in | `string` | n/a | yes |
+| <a name="input_do_vault_mount"></a> [do\_vault\_mount](#input\_do\_vault\_mount) | Path of the Vault mount where we have stored the Digital Ocean secret | `string` | n/a | yes |
+| <a name="input_do_vault_secret"></a> [do\_vault\_secret](#input\_do\_vault\_secret) | Name of the secret in the Vault mount | `string` | n/a | yes |
+| <a name="input_k8s_cluster_name"></a> [k8s\_cluster\_name](#input\_k8s\_cluster\_name) | Name of the cluster to create | `string` | `"krateo-control-plane"` | no |
+| <a name="input_k8s_version_prefix"></a> [k8s\_version\_prefix](#input\_k8s\_version\_prefix) | Version prefix for kubernetes cluster | `string` | `"1.25."` | no |
+| <a name="input_krateo_endpoint"></a> [krateo\_endpoint](#input\_krateo\_endpoint) | DNS name to use for the Krateo endpoint | `string` | n/a | yes |
+| <a name="input_krateo_version"></a> [krateo\_version](#input\_krateo\_version) | Version of the Krateo release to use | `string` | n/a | yes |
 
-## Reference architecture
+## Outputs
 
-We are aware we have mentioned many different software components so far, thus we see why you may be a tad confused. In summary, Krateo' reference architecture can be depicted as follows:
-
-<img src="docs/media/reference_architecture.png" width="700px" alt="Reference architecture"/>
-
-## How does it work?
-
-<img src="docs/media/how_does_it_work.png" width="700px" alt="How does it work"/>
+No outputs.
+<!-- END OF PRE-COMMIT-TERRAFORM DOCS HOOK -->
