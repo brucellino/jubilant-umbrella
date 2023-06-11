@@ -144,15 +144,23 @@ locals {
 
 resource "null_resource" "k_install" {
   triggers = {
-    k8s_endpoint = digitalocean_kubernetes_cluster.k.urn
+    kube_config = local_file.k8sconfig.filename
   }
   provisioner "local-exec" {
+    when        = create
     command     = "curl -fSL ${local.krateo_release_url} | tar xz krateo >krateo"
     interpreter = ["/bin/bash", "-c"]
   }
 
   provisioner "local-exec" {
+    when        = create
     command     = "echo '${var.cf_zone}' | ./krateo init --kubeconfig ${local_file.k8sconfig.filename}"
+    interpreter = ["/bin/bash", "-c"]
+  }
+
+  provisioner "local-exec" {
+    when        = destroy
+    command     = "./krateo uninstall --kubeconfig kubeconfig-krateo-control-plane"
     interpreter = ["/bin/bash", "-c"]
   }
 }
@@ -161,7 +169,7 @@ resource "null_resource" "k_install" {
 data "digitalocean_loadbalancer" "krateo" {
   depends_on = [null_resource.k_install]
   # id         = "d72d4916-9023-4616-b292-33032dda4799" # <- obtained from the console
-  name = "a377b25f30a4149538465e330ca32e50" # <- obtained from the console.
+  name = "a6434671d1dde4647804e9cd6261d5d6" # <- obtained from the console.
 }
 
 resource "cloudflare_record" "k" {
