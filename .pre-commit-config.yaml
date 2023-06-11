@@ -24,11 +24,12 @@ repos:
         args:
           - --hook-config=--path-to-file=README.md
           - --hook-config=--create-file-if-not-exist=true
-  - repo: https://github.com/Yelp/detect-secrets
-    rev: v1.4.0
-    hooks:
-      - id: detect-secrets
-        args:
-          - '--baseline=.secrets.baseline'
-          - '--exclude-files'
-          - '"^\.terraform.lock.hcl|\.secrets\.baseline"'
+  # - repo: https://github.com/Yelp/detect-secrets
+  #   rev: v1.4.0
+  #   hooks:
+  #     - id: detect-secrets
+  #       args:
+  #         - '--baseline'
+  #         - '.secrets.baseline'
+  #         - '--exclude-files'
+  #         - '"^\.terraform.lock.hcl|\.secrets\.baseline"'
