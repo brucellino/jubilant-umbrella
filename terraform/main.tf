@@ -9,7 +9,7 @@ terraform {
     }
     vault = {
       source  = "hashicorp/vault"
-      version = "3.23.0"
+      version = "3.24.0"
     }
     cloudflare = {
       source  = "cloudflare/cloudflare"
